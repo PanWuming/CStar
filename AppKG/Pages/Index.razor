@@ -1,0 +1,59 @@
+﻿@using System.Text.Json
+@using appkg.Data
+@inject IHttpClientFactory ClientFactory
+
+@page "/"
+<EditForm Model="@model0" >
+    @* <DataAnnotationsValidator />
+    <ValidationSummary /> *@
+
+<PageTitle>Index</PageTitle>
+<h1>Get NER: </h1>
+<input  @bind="inText" style="width: 100%;height:50;" @oninput="UpdateValue" />
+@* =(e=>{inText=e.Value;}) *@
+<button @onclick="CallWebApi">
+       Compute
+    </button>
+<InputText  @bind-Value="outText" style="width: 100%;height:50;"/>
+</EditForm>
+
+
+
+@code {
+    
+    private ForIntext model0 =new ForIntext(){
+            InText = ""
+            };
+    private string inText {get;set;} 
+    private string outText{get;set;} = "";
+    private HttpClient client;
+
+    
+    public void CallWebApi()
+    {
+        outText = "";
+        var t = new ForIntext(){
+            InText = inText
+            };
+        var serializeOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            //WriteIndented = true
+        };
+        HttpResponseMessage response = client.PostAsJsonAsync<ForIntext>("nemo",t,serializeOptions).GetAwaiter().GetResult();
+        outText = "";
+        if (response.IsSuccessStatusCode)
+        {
+            outText = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+        }
+    }
+    protected void UpdateValue(ChangeEventArgs e)
+    {
+        model0.InText = (string)e.Value;
+    }
+    protected override async Task OnInitializedAsync()  
+    {
+        client = ClientFactory.CreateClient("NemoClient");
+    }
+    
+}
